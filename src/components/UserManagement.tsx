@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Plus, Edit, Trash2, Users, Calendar, Timer, Mail, Phone, User } from "lucide-react";
 
 interface User {
@@ -82,11 +82,7 @@ const UserManagement = () => {
         .order('id', { ascending: true });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch users",
-          variant: "destructive",
-        });
+        toast.error("Failed to fetch users");
         return;
       }
 
@@ -106,11 +102,7 @@ const UserManagement = () => {
 
       setUsers(usersWithCalculatedData || []);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -139,29 +131,17 @@ const UserManagement = () => {
         .select();
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "User added successfully",
-        variant: "default",
-      });
+      toast.success("User added successfully");
 
       setIsAddDialogOpen(false);
       resetForm();
       fetchUsers();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -188,30 +168,18 @@ const UserManagement = () => {
         .eq('id', editingUser.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-        variant: "default",
-      });
+      toast.success("User updated successfully");
 
       setIsEditDialogOpen(false);
       setEditingUser(null);
       resetForm();
       fetchUsers();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -224,27 +192,15 @@ const UserManagement = () => {
         .eq('id', userId);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        toast.error(error.message);
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-        variant: "default",
-      });
+      toast.success("User deleted successfully");
 
       fetchUsers();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred");
     }
   };
 
