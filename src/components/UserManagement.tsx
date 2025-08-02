@@ -13,7 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, User, Copy, Plus } from "lucide-react";
+import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, User, Copy, Plus, ChevronDown } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -34,6 +35,7 @@ interface UserFormData {
   phone: string;
   subscription_start: Date | undefined;
   subscription_end: Date | undefined;
+  stored_email: string;
 }
 
 
@@ -43,7 +45,8 @@ const UserFormFields = ({
   isValid, 
   onSubmit, 
   submitText,
-  onReset 
+  onReset,
+  accounts 
 }: { 
   formData: UserFormData; 
   setFormData: (data: UserFormData) => void; 
@@ -51,6 +54,7 @@ const UserFormFields = ({
   onSubmit: () => void;
   submitText: string;
   onReset: () => void;
+  accounts: any[];
 }) => (
   <div className="grid gap-6 py-4">
     <div className="grid gap-4">
@@ -159,6 +163,35 @@ const UserFormFields = ({
           </Popover>
         </div>
       </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label className="text-right font-medium">
+          Stored Email
+        </Label>
+        <div className="col-span-3">
+          <Select 
+            value={formData.stored_email} 
+            onValueChange={(value) => setFormData({...formData, stored_email: value})}
+          >
+            <SelectTrigger className="w-full bg-background border-input">
+              <SelectValue placeholder="Select a stored email" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border-input shadow-lg z-50 max-h-[200px] overflow-y-auto">
+              {accounts.length > 0 ? (
+                accounts.map((account, index) => (
+                  <SelectItem key={account.id || index} value={account.email} className="cursor-pointer hover:bg-accent">
+                    {account.email}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled className="text-muted-foreground">
+                  No stored emails available
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
     
     <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -190,6 +223,7 @@ const UserManagement = () => {
     phone: "",
     subscription_start: undefined,
     subscription_end: undefined,
+    stored_email: "",
   });
   const [editFormData, setEditFormData] = useState<UserFormData>({
     name: "",
@@ -197,6 +231,7 @@ const UserManagement = () => {
     phone: "",
     subscription_start: undefined,
     subscription_end: undefined,
+    stored_email: "",
   });
 
   // Calculate days between two dates
@@ -387,6 +422,7 @@ const UserManagement = () => {
       phone: "",
       subscription_start: undefined,
       subscription_end: undefined,
+      stored_email: "",
     });
   };
 
@@ -398,6 +434,7 @@ const UserManagement = () => {
       phone: "",
       subscription_start: undefined,
       subscription_end: undefined,
+      stored_email: "",
     });
   };
 
@@ -410,6 +447,7 @@ const UserManagement = () => {
       phone: user.phone || "",
       subscription_start: user.subscription_start ? new Date(user.subscription_start) : undefined,
       subscription_end: user.subscription_end ? new Date(user.subscription_end) : undefined,
+      stored_email: "",
     });
     setIsEditDialogOpen(true);
   };
@@ -480,6 +518,7 @@ const UserManagement = () => {
               onSubmit={addUser}
               submitText="Add User"
               onReset={resetAddForm}
+              accounts={accounts}
             />
           </DialogContent>
         </Dialog>
@@ -562,6 +601,7 @@ const UserManagement = () => {
               onSubmit={updateUser}
               submitText="Update User"
               onReset={resetEditForm}
+              accounts={accounts}
             />
           )}
         </DialogContent>
