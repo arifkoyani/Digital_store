@@ -320,6 +320,18 @@ const UserManagement = () => {
         return;
       }
 
+      // Check if stored email is selected and validate usage count
+      if (addFormData.stored_email) {
+        const selectedAccount = accounts.find(account => account.email === addFormData.stored_email);
+        if (selectedAccount) {
+          const currentUsage = selectedAccount.count_usage || 0;
+          if (currentUsage >= 10) {
+            toast.error("Email usage is full");
+            return;
+          }
+        }
+      }
+
       const totalDays = calculateDaysBetween(addFormData.subscription_start, addFormData.subscription_end);
       const usedDays = calculateUsedDays(addFormData.subscription_start);
 
@@ -341,6 +353,26 @@ const UserManagement = () => {
       if (error) {
         toast.error(error.message);
         return;
+      }
+
+      // If user was added successfully and stored email was selected, increment usage count
+      if (addFormData.stored_email) {
+        const selectedAccount = accounts.find(account => account.email === addFormData.stored_email);
+        if (selectedAccount) {
+          const newUsageCount = (selectedAccount.count_usage || 0) + 1;
+          
+          const { error: updateError } = await (supabase as any)
+            .from('accounts')
+            .update({ count_usage: newUsageCount })
+            .eq('email', addFormData.stored_email);
+
+          if (updateError) {
+            console.error("Failed to update usage count:", updateError);
+          } else {
+            // Refresh accounts data to reflect updated usage count
+            fetchAccounts();
+          }
+        }
       }
 
       toast.success("User added successfully");
