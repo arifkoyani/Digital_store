@@ -35,6 +35,145 @@ interface UserFormData {
   subscription_end: Date | undefined;
 }
 
+const UserFormFields = ({ 
+  formData, 
+  setFormData, 
+  isValid, 
+  onSubmit, 
+  submitText,
+  onReset 
+}: { 
+  formData: UserFormData; 
+  setFormData: (data: UserFormData) => void; 
+  isValid: boolean;
+  onSubmit: () => void;
+  submitText: string;
+  onReset: () => void;
+}) => (
+  <div className="grid gap-6 py-4">
+    <div className="grid gap-4">
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="name" className="text-right font-medium">
+          Name <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="col-span-3"
+          placeholder="Enter full name"
+          required
+        />
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="email" className="text-right font-medium">
+          Email <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="col-span-3"
+          placeholder="Enter email address"
+          required
+        />
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="phone" className="text-right font-medium">
+          Phone <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="phone"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          className="col-span-3"
+          placeholder="Enter phone number"
+          required
+        />
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label className="text-right font-medium">
+          Start Date <span className="text-destructive">*</span>
+        </Label>
+        <div className="col-span-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.subscription_start && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.subscription_start ? format(formData.subscription_start, "PPP") : <span>Pick start date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.subscription_start}
+                onSelect={(date) => setFormData({ ...formData, subscription_start: date })}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label className="text-right font-medium">
+          End Date <span className="text-destructive">*</span>
+        </Label>
+        <div className="col-span-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.subscription_end && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.subscription_end ? format(formData.subscription_end, "PPP") : <span>Pick end date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.subscription_end}
+                onSelect={(date) => setFormData({ ...formData, subscription_end: date })}
+                initialFocus
+                disabled={(date) => formData.subscription_start ? date < formData.subscription_start : false}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    </div>
+    
+    <div className="flex justify-end space-x-2 pt-4 border-t">
+      <Button type="button" variant="outline" onClick={onReset}>
+        Reset
+      </Button>
+      <Button 
+        onClick={onSubmit}
+        disabled={!isValid}
+        className="min-w-[100px]"
+      >
+        {submitText}
+      </Button>
+    </div>
+  </div>
+);
+
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -282,144 +421,6 @@ const UserManagement = () => {
            editFormData.subscription_end !== undefined;
   };
 
-const UserFormFields = ({ 
-  formData, 
-  setFormData, 
-  isValid, 
-  onSubmit, 
-  submitText,
-  onReset 
-}: { 
-  formData: UserFormData; 
-  setFormData: (data: UserFormData) => void; 
-  isValid: boolean;
-  onSubmit: () => void;
-  submitText: string;
-  onReset: () => void;
-}) => (
-    <div className="grid gap-6 py-4">
-      <div className="grid gap-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right font-medium">
-            Name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="col-span-3"
-            placeholder="Enter full name"
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="email" className="text-right font-medium">
-            Email <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="col-span-3"
-            placeholder="Enter email address"
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="phone" className="text-right font-medium">
-            Phone <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="col-span-3"
-            placeholder="Enter phone number"
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right font-medium">
-            Start Date <span className="text-destructive">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.subscription_start && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.subscription_start ? format(formData.subscription_start, "PPP") : <span>Pick start date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.subscription_start}
-                  onSelect={(date) => setFormData({ ...formData, subscription_start: date })}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right font-medium">
-            End Date <span className="text-destructive">*</span>
-          </Label>
-          <div className="col-span-3">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.subscription_end && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.subscription_end ? format(formData.subscription_end, "PPP") : <span>Pick end date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.subscription_end}
-                  onSelect={(date) => setFormData({ ...formData, subscription_end: date })}
-                  initialFocus
-                  disabled={(date) => formData.subscription_start ? date < formData.subscription_start : false}
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex justify-end space-x-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onReset}>
-          Reset
-        </Button>
-        <Button 
-          onClick={onSubmit}
-          disabled={!isValid}
-          className="min-w-[100px]"
-        >
-          {submitText}
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="container mx-auto py-6 space-y-6">
