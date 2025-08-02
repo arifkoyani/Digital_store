@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, Phone, User } from "lucide-react";
+import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, Phone, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -38,10 +38,16 @@ interface UserFormData {
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("add");
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
+  const [addFormData, setAddFormData] = useState<UserFormData>({
+    name: "",
+    email: "",
+    phone: "",
+    subscription_start: undefined,
+    subscription_end: undefined,
+  });
+  const [editFormData, setEditFormData] = useState<UserFormData>({
     name: "",
     email: "",
     phone: "",
@@ -111,23 +117,23 @@ const UserManagement = () => {
   // Add new user
   const addUser = async () => {
     try {
-      if (!formData.subscription_start || !formData.subscription_end) {
+      if (!addFormData.subscription_start || !addFormData.subscription_end) {
         toast.error("Please select both start and end dates");
         return;
       }
 
-      const totalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
-      const usedDays = calculateUsedDays(formData.subscription_start);
+      const totalDays = calculateDaysBetween(addFormData.subscription_start, addFormData.subscription_end);
+      const usedDays = calculateUsedDays(addFormData.subscription_start);
 
       const { data, error } = await supabase
         .from('users')
         .insert([
           {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            subscription_start: format(formData.subscription_start, 'yyyy-MM-dd'),
-            subscription_end: format(formData.subscription_end, 'yyyy-MM-dd'),
+            name: addFormData.name,
+            email: addFormData.email,
+            phone: addFormData.phone,
+            subscription_start: format(addFormData.subscription_start, 'yyyy-MM-dd'),
+            subscription_end: format(addFormData.subscription_end, 'yyyy-MM-dd'),
             total_days: totalDays,
             used_days: usedDays,
           },
@@ -141,8 +147,7 @@ const UserManagement = () => {
 
       toast.success("User added successfully");
 
-      setIsAddDialogOpen(false);
-      resetForm();
+      resetAddForm();
       fetchUsers();
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -154,22 +159,22 @@ const UserManagement = () => {
     if (!editingUser) return;
 
     try {
-      if (!formData.subscription_start || !formData.subscription_end) {
+      if (!editFormData.subscription_start || !editFormData.subscription_end) {
         toast.error("Please select both start and end dates");
         return;
       }
 
-      const totalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
-      const usedDays = calculateUsedDays(formData.subscription_start);
+      const totalDays = calculateDaysBetween(editFormData.subscription_start, editFormData.subscription_end);
+      const usedDays = calculateUsedDays(editFormData.subscription_start);
 
       const { error } = await supabase
         .from('users')
         .update({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          subscription_start: format(formData.subscription_start, 'yyyy-MM-dd'),
-          subscription_end: format(formData.subscription_end, 'yyyy-MM-dd'),
+          name: editFormData.name,
+          email: editFormData.email,
+          phone: editFormData.phone,
+          subscription_start: format(editFormData.subscription_start, 'yyyy-MM-dd'),
+          subscription_end: format(editFormData.subscription_end, 'yyyy-MM-dd'),
           total_days: totalDays,
           used_days: usedDays,
         })
@@ -182,9 +187,8 @@ const UserManagement = () => {
 
       toast.success("User updated successfully");
 
-      setIsEditDialogOpen(false);
       setEditingUser(null);
-      resetForm();
+      resetEditForm();
       fetchUsers();
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -212,9 +216,9 @@ const UserManagement = () => {
     }
   };
 
-  // Reset form
-  const resetForm = () => {
-    setFormData({
+  // Reset add form
+  const resetAddForm = () => {
+    setAddFormData({
       name: "",
       email: "",
       phone: "",
@@ -223,17 +227,28 @@ const UserManagement = () => {
     });
   };
 
-  // Open edit dialog
-  const openEditDialog = (user: User) => {
+  // Reset edit form
+  const resetEditForm = () => {
+    setEditFormData({
+      name: "",
+      email: "",
+      phone: "",
+      subscription_start: undefined,
+      subscription_end: undefined,
+    });
+  };
+
+  // Open edit tab
+  const openEditTab = (user: User) => {
     setEditingUser(user);
-    setFormData({
+    setEditFormData({
       name: user.name || "",
       email: user.email || "",
       phone: user.phone || "",
       subscription_start: user.subscription_start ? new Date(user.subscription_start) : undefined,
       subscription_end: user.subscription_end ? new Date(user.subscription_end) : undefined,
     });
-    setIsEditDialogOpen(true);
+    setActiveTab("edit");
   };
 
   // Load users on component mount
@@ -249,16 +264,39 @@ const UserManagement = () => {
     }
   };
 
-  // Check if form is valid
-  const isFormValid = () => {
-    return formData.name.trim() !== "" && 
-           formData.email.trim() !== "" && 
-           formData.phone.trim() !== "" && 
-           formData.subscription_start !== undefined && 
-           formData.subscription_end !== undefined;
+  // Check if add form is valid
+  const isAddFormValid = () => {
+    return addFormData.name.trim() !== "" && 
+           addFormData.email.trim() !== "" && 
+           addFormData.phone.trim() !== "" && 
+           addFormData.subscription_start !== undefined && 
+           addFormData.subscription_end !== undefined;
   };
 
-  const UserForm = ({ onSubmit, submitText }: { onSubmit: () => void; submitText: string }) => (
+  // Check if edit form is valid
+  const isEditFormValid = () => {
+    return editFormData.name.trim() !== "" && 
+           editFormData.email.trim() !== "" && 
+           editFormData.phone.trim() !== "" && 
+           editFormData.subscription_start !== undefined && 
+           editFormData.subscription_end !== undefined;
+  };
+
+  const UserFormFields = ({ 
+    formData, 
+    setFormData, 
+    isValid, 
+    onSubmit, 
+    submitText,
+    onReset 
+  }: { 
+    formData: UserFormData; 
+    setFormData: (data: UserFormData) => void; 
+    isValid: boolean;
+    onSubmit: () => void;
+    submitText: string;
+    onReset: () => void;
+  }) => (
     <div className="grid gap-6 py-4">
       <div className="grid gap-4">
         <div className="grid grid-cols-4 items-center gap-4">
@@ -369,16 +407,12 @@ const UserManagement = () => {
       </div>
       
       <div className="flex justify-end space-x-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={() => {
-          setIsAddDialogOpen(false);
-          setIsEditDialogOpen(false);
-          resetForm();
-        }}>
-          Cancel
+        <Button type="button" variant="outline" onClick={onReset}>
+          Reset
         </Button>
         <Button 
           onClick={onSubmit}
-          disabled={!isFormValid()}
+          disabled={!isValid}
           className="min-w-[100px]"
         >
           {submitText}
@@ -400,26 +434,6 @@ const UserManagement = () => {
             Manage user subscriptions and track their status
           </p>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              resetForm();
-              setIsAddDialogOpen(true);
-            }}>
-              <Plus className="h-4 w-4" />
-              Add User
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user with subscription details. Total days and used days will be calculated automatically.
-              </DialogDescription>
-            </DialogHeader>
-            <UserForm onSubmit={addUser} submitText="Add User" />
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Stats Cards */}
@@ -456,6 +470,67 @@ const UserManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* User Management Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="add">Add New User</TabsTrigger>
+          <TabsTrigger value="edit">Edit User</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="add" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Add New User</CardTitle>
+              <CardDescription>
+                Create a new user with subscription details. Total days and used days will be calculated automatically.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserFormFields
+                formData={addFormData}
+                setFormData={setAddFormData}
+                isValid={isAddFormValid()}
+                onSubmit={addUser}
+                submitText="Add User"
+                onReset={resetAddForm}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="edit" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Edit User</CardTitle>
+              <CardDescription>
+                {editingUser 
+                  ? `Update information for ${editingUser.name}. Total days and used days will be calculated automatically.`
+                  : "Select a user from the table below to edit their information."
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {editingUser ? (
+                <UserFormFields
+                  formData={editFormData}
+                  setFormData={setEditFormData}
+                  isValid={isEditFormValid()}
+                  onSubmit={updateUser}
+                  submitText="Update User"
+                  onReset={resetEditForm}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-muted-foreground">
+                    Click the edit button next to a user in the table below to start editing.
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Users Table */}
       <Card>
@@ -521,7 +596,7 @@ const UserManagement = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openEditDialog(user)}
+                            onClick={() => openEditTab(user)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -560,19 +635,6 @@ const UserManagement = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information and subscription details. Total days and used days will be calculated automatically.
-            </DialogDescription>
-          </DialogHeader>
-          <UserForm onSubmit={updateUser} submitText="Update User" />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
