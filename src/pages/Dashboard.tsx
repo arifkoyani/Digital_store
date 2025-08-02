@@ -8,6 +8,10 @@ const Dashboard = () => {
     navigate("/netflix");
   };
 
+  const handleStoreClick = () => {
+    navigate("/store");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="flex justify-between items-center p-4 border-b">
@@ -18,7 +22,7 @@ const Dashboard = () => {
       </div>
       
       <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           <Card 
             className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
             onClick={handleNetflixClick}
@@ -40,6 +44,20 @@ const Dashboard = () => {
             <CardContent>
               <div className="flex justify-center items-center h-20">
                 <p className="text-muted-foreground">Click to manage Amazon Prime users</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={handleStoreClick}
+          >
+            <CardHeader>
+              <CardTitle className="text-xl text-center">Store</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-center items-center h-20">
+                <p className="text-muted-foreground">Click to access store</p>
               </div>
             </CardContent>
           </Card>
