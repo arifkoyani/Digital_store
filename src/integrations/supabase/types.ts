@@ -14,10 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          bank_name: string | null
+          card_number: string
+          count_usage: number | null
+          cvc: string
+          email: string
+          email_password: string
+          expire_date: string
+          id: string
+          Owner: string | null
+        }
+        Insert: {
+          bank_name?: string | null
+          card_number: string
+          count_usage?: number | null
+          cvc: string
+          email: string
+          email_password: string
+          expire_date: string
+          id?: string
+          Owner?: string | null
+        }
+        Update: {
+          bank_name?: string | null
+          card_number?: string
+          count_usage?: number | null
+          cvc?: string
+          email?: string
+          email_password?: string
+          expire_date?: string
+          id?: string
+          Owner?: string | null
+        }
+        Relationships: []
+      }
+      amazon: {
+        Row: {
+          bank_name: string | null
+          card_number: string
+          cvc: string
+          email: string
+          email_password: string
+          expire_date: string
+          id: string
+          Owner: string | null
+        }
+        Insert: {
+          bank_name?: string | null
+          card_number: string
+          cvc: string
+          email: string
+          email_password: string
+          expire_date: string
+          id?: string
+          Owner?: string | null
+        }
+        Update: {
+          bank_name?: string | null
+          card_number?: string
+          cvc?: string
+          email?: string
+          email_password?: string
+          expire_date?: string
+          id?: string
+          Owner?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           email: string | null
-          id: number
+          id: string
           name: string | null
           phone: string | null
           status: string | null
@@ -28,7 +97,7 @@ export type Database = {
         }
         Insert: {
           email?: string | null
-          id?: number
+          id?: string
           name?: string | null
           phone?: string | null
           status?: string | null
@@ -39,7 +108,7 @@ export type Database = {
         }
         Update: {
           email?: string | null
-          id?: number
+          id?: string
           name?: string | null
           phone?: string | null
           status?: string | null
