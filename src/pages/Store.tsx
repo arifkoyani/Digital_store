@@ -333,7 +333,7 @@ const Store = () => {
         <div className="flex justify-center mb-8">
           <Dialog open={isAddAccountDialogOpen} onOpenChange={setIsAddAccountDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="flex items-center gap-2 pl-[50px]">
                 <Plus size={16} />
                 Add Account
               </Button>
