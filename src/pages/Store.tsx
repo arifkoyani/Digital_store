@@ -384,7 +384,7 @@ const Store = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 pr-[150px]"
+                          className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 mr-[150px]"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteAccount(account.id, account.email);
