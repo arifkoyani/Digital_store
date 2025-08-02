@@ -45,7 +45,7 @@ const Auth = () => {
 
       // Insert user into auth_users table
       const { data, error } = await supabase
-        .from("auth_users" as any)
+        .from("auth_users")
         .insert([
           {
             email: signupData.email,
@@ -84,7 +84,7 @@ const Auth = () => {
     try {
       // Get user from database
       const { data: user, error } = await supabase
-        .from("auth_users" as any)
+        .from("auth_users")
         .select("*")
         .eq("email", loginData.email)
         .single();
@@ -95,7 +95,7 @@ const Auth = () => {
       }
 
       // Verify password
-      const passwordMatch = await bcrypt.compare(loginData.password, (user as any).password_hash);
+      const passwordMatch = await bcrypt.compare(loginData.password, user.password_hash);
       
       if (!passwordMatch) {
         toast.error("Invalid email or password");
@@ -104,16 +104,16 @@ const Auth = () => {
 
       // Update last login
       await supabase
-        .from("auth_users" as any)
+        .from("auth_users")
         .update({ last_login: new Date().toISOString() })
-        .eq("id", (user as any).id);
+        .eq("id", user.id);
 
       // Store user session in localStorage
       const userSession = {
-        id: (user as any).id,
-        email: (user as any).email,
-        username: (user as any).username,
-        created_at: (user as any).created_at
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        created_at: user.created_at
       };
       
       localStorage.setItem("user", JSON.stringify(userSession));
