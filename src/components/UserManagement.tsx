@@ -414,6 +414,19 @@ const UserManagement = () => {
   // Delete user
   const deleteUser = async (userId: number) => {
     try {
+      // First, get the user data to find the associated email
+      const { data: userData, error: getUserError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('id', userId)
+        .single();
+
+      if (getUserError) {
+        toast.error("Failed to get user data");
+        return;
+      }
+
+      // Delete the user
       const { error } = await supabase
         .from('users')
         .delete()
@@ -424,8 +437,27 @@ const UserManagement = () => {
         return;
       }
 
-      toast.success("User deleted successfully");
+      // If user was deleted successfully and has an associated email, decrease usage count
+      if (userData?.email) {
+        const associatedAccount = accounts.find(account => account.email === userData.email);
+        if (associatedAccount && associatedAccount.count_usage > 0) {
+          const newUsageCount = (associatedAccount.count_usage || 1) - 1;
+          
+          const { error: updateError } = await (supabase as any)
+            .from('accounts')
+            .update({ count_usage: newUsageCount })
+            .eq('email', userData.email);
 
+          if (updateError) {
+            console.error("Failed to update usage count:", updateError);
+          } else {
+            // Refresh accounts data to reflect updated usage count
+            fetchAccounts();
+          }
+        }
+      }
+
+      toast.success("User deleted successfully");
       fetchUsers();
     } catch (error) {
       toast.error("An unexpected error occurred");
