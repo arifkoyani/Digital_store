@@ -59,6 +59,35 @@ const UserFormFields = ({
   <div className="grid gap-6 py-4">
     <div className="grid gap-4">
       <div className="grid grid-cols-4 items-center gap-4">
+        <Label className="text-right font-medium">
+          Select Stored Email
+        </Label>
+        <div className="col-span-3">
+          <Select 
+            value={formData.stored_email} 
+            onValueChange={(value) => setFormData({...formData, stored_email: value})}
+          >
+            <SelectTrigger className="w-full bg-background border-input">
+              <SelectValue placeholder="Select a stored email" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border-input shadow-lg z-50 max-h-[200px] overflow-y-auto">
+              {accounts.length > 0 ? (
+                accounts.map((account, index) => (
+                  <SelectItem key={account.id || index} value={account.email} className="cursor-pointer hover:bg-accent">
+                    {account.email}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled className="text-muted-foreground">
+                  No stored emails available
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="name" className="text-right font-medium">
           Name <span className="text-destructive">*</span>
         </Label>
@@ -161,35 +190,6 @@ const UserFormFields = ({
               />
             </PopoverContent>
           </Popover>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label className="text-right font-medium">
-          Stored Email
-        </Label>
-        <div className="col-span-3">
-          <Select 
-            value={formData.stored_email} 
-            onValueChange={(value) => setFormData({...formData, stored_email: value})}
-          >
-            <SelectTrigger className="w-full bg-background border-input">
-              <SelectValue placeholder="Select a stored email" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-input shadow-lg z-50 max-h-[200px] overflow-y-auto">
-              {accounts.length > 0 ? (
-                accounts.map((account, index) => (
-                  <SelectItem key={account.id || index} value={account.email} className="cursor-pointer hover:bg-accent">
-                    {account.email}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="" disabled className="text-muted-foreground">
-                  No stored emails available
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
         </div>
       </div>
     </div>
