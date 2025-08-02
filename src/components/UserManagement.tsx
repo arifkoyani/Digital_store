@@ -436,17 +436,29 @@ const UserManagement = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Users className="h-8 w-8 text-primary" />
-            User Management
-          </h1>
-          <p className="text-muted-foreground">
-            Manage user subscriptions and track their status
-          </p>
-        </div>
+      {/* Centered Add User Button */}
+      <div className="flex justify-center">
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="w-32">Add User</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user with subscription details. Total days and used days will be calculated automatically.
+              </DialogDescription>
+            </DialogHeader>
+            <UserFormFields
+              formData={addFormData}
+              setFormData={setAddFormData}
+              isValid={isAddFormValid()}
+              onSubmit={addUser}
+              submitText="Add User"
+              onReset={resetAddForm}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Cards */}
@@ -484,31 +496,6 @@ const UserManagement = () => {
         </Card>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>Add User</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user with subscription details. Total days and used days will be calculated automatically.
-              </DialogDescription>
-            </DialogHeader>
-            <UserFormFields
-              formData={addFormData}
-              setFormData={setAddFormData}
-              isValid={isAddFormValid()}
-              onSubmit={addUser}
-              submitText="Add User"
-              onReset={resetAddForm}
-            />
-          </DialogContent>
-        </Dialog>
-
-      </div>
 
       {/* Edit User Modal */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
