@@ -14,10 +14,37 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          last_login: string | null
+          password_hash: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          last_login?: string | null
+          password_hash: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_login?: string | null
+          password_hash?: string
+          username?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           email: string | null
-          id: number
+          id: string
           name: string | null
           phone: string | null
           status: string | null
@@ -28,7 +55,7 @@ export type Database = {
         }
         Insert: {
           email?: string | null
-          id?: number
+          id?: string
           name?: string | null
           phone?: string | null
           status?: string | null
@@ -39,7 +66,7 @@ export type Database = {
         }
         Update: {
           email?: string | null
-          id?: number
+          id?: string
           name?: string | null
           phone?: string | null
           status?: string | null
