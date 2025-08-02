@@ -603,7 +603,7 @@ const UserManagement = () => {
             {accounts.length > 0 ? (
               accounts.map((account, index) => (
                 <div key={account.id || index} className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-                  {account.email}
+                  {account.email}: usage: {account.count_usage || 0}
                 </div>
               ))
             ) : (
