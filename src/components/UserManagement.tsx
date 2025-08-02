@@ -249,106 +249,126 @@ const UserManagement = () => {
     }
   };
 
+  // Check if form is valid
+  const isFormValid = () => {
+    return formData.name.trim() !== "" && 
+           formData.email.trim() !== "" && 
+           formData.phone.trim() !== "" && 
+           formData.subscription_start !== undefined && 
+           formData.subscription_end !== undefined;
+  };
+
   const UserForm = ({ onSubmit, submitText }: { onSubmit: () => void; submitText: string }) => (
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="name" className="text-right">
-          Name
-        </Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter full name"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="email" className="text-right">
-          Email
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter email address"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="phone" className="text-right">
-          Phone
-        </Label>
-        <Input
-          id="phone"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter phone number"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label className="text-right">
-          Start Date
-        </Label>
-        <div className="col-span-3">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.subscription_start && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.subscription_start ? format(formData.subscription_start, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.subscription_start}
-                onSelect={(date) => setFormData({ ...formData, subscription_start: date })}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+    <div className="grid gap-6 py-4">
+      <div className="grid gap-4">
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="name" className="text-right font-medium">
+            Name <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="col-span-3"
+            placeholder="Enter full name"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="email" className="text-right font-medium">
+            Email <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="col-span-3"
+            placeholder="Enter email address"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="phone" className="text-right font-medium">
+            Phone <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            className="col-span-3"
+            placeholder="Enter phone number"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label className="text-right font-medium">
+            Start Date <span className="text-destructive">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.subscription_start && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.subscription_start ? format(formData.subscription_start, "PPP") : <span>Pick start date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.subscription_start}
+                  onSelect={(date) => setFormData({ ...formData, subscription_start: date })}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label className="text-right font-medium">
+            End Date <span className="text-destructive">*</span>
+          </Label>
+          <div className="col-span-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.subscription_end && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.subscription_end ? format(formData.subscription_end, "PPP") : <span>Pick end date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.subscription_end}
+                  onSelect={(date) => setFormData({ ...formData, subscription_end: date })}
+                  initialFocus
+                  disabled={(date) => formData.subscription_start ? date < formData.subscription_start : false}
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label className="text-right">
-          End Date
-        </Label>
-        <div className="col-span-3">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.subscription_end && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.subscription_end ? format(formData.subscription_end, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.subscription_end}
-                onSelect={(date) => setFormData({ ...formData, subscription_end: date })}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-      <div className="flex justify-end space-x-2">
+      
+      <div className="flex justify-end space-x-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={() => {
           setIsAddDialogOpen(false);
           setIsEditDialogOpen(false);
@@ -356,7 +376,11 @@ const UserManagement = () => {
         }}>
           Cancel
         </Button>
-        <Button onClick={onSubmit}>
+        <Button 
+          onClick={onSubmit}
+          disabled={!isFormValid()}
+          className="min-w-[100px]"
+        >
           {submitText}
         </Button>
       </div>
