@@ -50,9 +50,10 @@ interface AccountFormData {
   email: string;
   email_password: string;
   card_number: string;
-  expire_date: Date | undefined;
+  expire_date: string;
   cvc: string;
   bank_name: string;
+  owner: string;
 }
 
 const UserFormFields = ({ 
@@ -257,34 +258,17 @@ const AccountFormFields = ({
       </div>
 
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label className="text-right font-medium">
+        <Label htmlFor="expire-date" className="text-right font-medium">
           Expire Date <span className="text-destructive">*</span>
         </Label>
-        <div className="col-span-3">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !formData.expire_date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {formData.expire_date ? format(formData.expire_date, "PPP") : <span>Pick expiry date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={formData.expire_date}
-                onSelect={(date) => setFormData({ ...formData, expire_date: date })}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <Input
+          id="expire-date"
+          value={formData.expire_date}
+          onChange={(e) => setFormData({ ...formData, expire_date: e.target.value })}
+          className="col-span-3"
+          placeholder="MM/YY"
+          required
+        />
       </div>
       
       <div className="grid grid-cols-4 items-center gap-4">
@@ -312,6 +296,20 @@ const AccountFormFields = ({
           onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
           className="col-span-3"
           placeholder="Enter bank name (optional)"
+        />
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="owner" className="text-right font-medium">
+          Own <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="owner"
+          value={formData.owner}
+          onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
+          className="col-span-3"
+          placeholder="Enter owner name"
+          required
         />
       </div>
     </div>
@@ -356,9 +354,10 @@ const UserManagement = () => {
     email: "",
     email_password: "",
     card_number: "",
-    expire_date: undefined,
+    expire_date: "",
     cvc: "",
     bank_name: "",
+    owner: "",
   });
 
   // Calculate days between two dates
@@ -602,7 +601,7 @@ const UserManagement = () => {
   const addAccount = async () => {
     try {
       if (!accountFormData.expire_date) {
-        toast.error("Please select an expiry date");
+        toast.error("Please enter an expiry date");
         return;
       }
 
@@ -613,9 +612,10 @@ const UserManagement = () => {
             email: accountFormData.email,
             email_password: accountFormData.email_password,
             card_number: accountFormData.card_number,
-            expire_date: format(accountFormData.expire_date, 'yyyy-MM-dd'),
+            expire_date: accountFormData.expire_date,
             cvc: accountFormData.cvc,
             bank_name: accountFormData.bank_name || null,
+            Owner: accountFormData.owner,
           },
         ])
         .select();
@@ -639,9 +639,10 @@ const UserManagement = () => {
       email: "",
       email_password: "",
       card_number: "",
-      expire_date: undefined,
+      expire_date: "",
       cvc: "",
       bank_name: "",
+      owner: "",
     });
   };
 
@@ -650,8 +651,9 @@ const UserManagement = () => {
     return accountFormData.email.trim() !== "" && 
            accountFormData.email_password.trim() !== "" && 
            accountFormData.card_number.trim() !== "" && 
-           accountFormData.expire_date !== undefined && 
-           accountFormData.cvc.trim() !== "";
+           accountFormData.expire_date.trim() !== "" && 
+           accountFormData.cvc.trim() !== "" &&
+           accountFormData.owner.trim() !== "";
   };
 
 
