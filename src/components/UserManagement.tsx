@@ -101,20 +101,6 @@ const UserFormFields = ({
         />
       </div>
       
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="email" className="text-right font-medium">
-          Email <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter email address"
-          required
-        />
-      </div>
       
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="phone" className="text-right font-medium">
@@ -340,7 +326,7 @@ const UserManagement = () => {
         .insert([
           {
             name: addFormData.name,
-            email: addFormData.email,
+            email: addFormData.stored_email,
             phone: addFormData.phone,
             subscription_start: format(addFormData.subscription_start, 'yyyy-MM-dd'),
             subscription_end: format(addFormData.subscription_end, 'yyyy-MM-dd'),
@@ -501,7 +487,7 @@ const UserManagement = () => {
   // Check if add form is valid
   const isAddFormValid = () => {
     return addFormData.name.trim() !== "" && 
-           addFormData.email.trim() !== "" && 
+           addFormData.stored_email.trim() !== "" && 
            addFormData.phone.trim() !== "" && 
            addFormData.subscription_start !== undefined && 
            addFormData.subscription_end !== undefined;
