@@ -109,7 +109,6 @@ const UserManagement = () => {
             subscription_end: formData.subscription_end,
             total_days: parseInt(formData.total_days) || 0,
             used_days: parseInt(formData.used_days) || 0,
-            status: calculatedStatus,
           },
         ])
         .select();
@@ -161,7 +160,6 @@ const UserManagement = () => {
           subscription_end: formData.subscription_end,
           total_days: parseInt(formData.total_days) || 0,
           used_days: parseInt(formData.used_days) || 0,
-          status: calculatedStatus,
         })
         .eq('id', editingUser.id);
 
