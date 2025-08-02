@@ -179,6 +179,7 @@ const UserFormFields = ({
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -254,6 +255,25 @@ const UserManagement = () => {
       toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch all accounts from accounts table
+  const fetchAccounts = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('accounts')
+        .select('*')
+        .order('email');
+      
+      if (error) {
+        toast.error("Failed to fetch accounts");
+        return;
+      }
+      
+      setAccounts(data || []);
+    } catch (error) {
+      toast.error("An unexpected error occurred while fetching accounts");
     }
   };
 
@@ -397,6 +417,7 @@ const UserManagement = () => {
   // Load users on component mount
   useEffect(() => {
     fetchUsers();
+    fetchAccounts();
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -499,6 +520,27 @@ const UserManagement = () => {
         </Card>
       </div>
 
+      {/* Email Status Bar */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Stored Emails</CardTitle>
+          <Mail className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold mb-4">{accounts.length}</div>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {accounts.length > 0 ? (
+              accounts.map((account, index) => (
+                <div key={account.id || index} className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
+                  {account.email}
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground">No emails stored</div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Edit User Modal */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
