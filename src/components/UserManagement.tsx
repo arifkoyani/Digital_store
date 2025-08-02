@@ -13,7 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, Phone, User } from "lucide-react";
+import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, User, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -423,6 +423,16 @@ const UserManagement = () => {
            editFormData.subscription_end !== undefined;
   };
 
+  // Copy phone number to clipboard
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Phone number copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy phone number");
+    }
+  };
+
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -498,39 +508,32 @@ const UserManagement = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">Edit User</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>
-                {editingUser 
-                  ? `Update information for ${editingUser.name}. Total days and used days will be calculated automatically.`
-                  : "Select a user from the table below to edit their information."
-                }
-              </DialogDescription>
-            </DialogHeader>
-            {editingUser ? (
-              <UserFormFields
-                formData={editFormData}
-                setFormData={setEditFormData}
-                isValid={isEditFormValid()}
-                onSubmit={updateUser}
-                submitText="Update User"
-                onReset={resetEditForm}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-32">
-                <div className="text-muted-foreground">
-                  Click the edit button next to a user in the table below to start editing.
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              {editingUser 
+                ? `Update information for ${editingUser.name}. Total days and used days will be calculated automatically.`
+                : "Select a user from the table below to edit their information."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <UserFormFields
+              formData={editFormData}
+              setFormData={setEditFormData}
+              isValid={isEditFormValid()}
+              onSubmit={updateUser}
+              submitText="Update User"
+              onReset={resetEditForm}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Users Table */}
       <Card>
@@ -580,12 +583,19 @@ const UserManagement = () => {
                           {user.email || "N/A"}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          {user.phone || "N/A"}
-                        </div>
-                      </TableCell>
+                       <TableCell>
+                         <div className="flex items-center gap-2">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => copyToClipboard(user.phone)}
+                             className="h-6 w-6 p-0"
+                           >
+                             <Copy className="h-3 w-3" />
+                           </Button>
+                           {user.phone || "N/A"}
+                         </div>
+                       </TableCell>
                       <TableCell>{user.subscription_start || "N/A"}</TableCell>
                       <TableCell>{user.subscription_end || "N/A"}</TableCell>
                       <TableCell>{user.total_days || 0}</TableCell>
