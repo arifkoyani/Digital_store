@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -7,9 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Users, Calendar, Timer, Mail, Phone, User } from "lucide-react";
+import { Plus, Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, Phone, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface User {
   id: number;
@@ -27,10 +31,8 @@ interface UserFormData {
   name: string;
   email: string;
   phone: string;
-  subscription_start: string;
-  subscription_end: string;
-  total_days: string;
-  used_days: string;
+  subscription_start: Date | undefined;
+  subscription_end: Date | undefined;
 }
 
 const UserManagement = () => {
@@ -43,14 +45,12 @@ const UserManagement = () => {
     name: "",
     email: "",
     phone: "",
-    subscription_start: "",
-    subscription_end: "",
-    total_days: "",
-    used_days: "0",
+    subscription_start: undefined,
+    subscription_end: undefined,
   });
 
   // Calculate days between two dates
-  const calculateDaysBetween = (startDate: string, endDate: string): number => {
+  const calculateDaysBetween = (startDate: string | Date, endDate: string | Date): number => {
     if (!startDate || !endDate) return 0;
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -59,7 +59,7 @@ const UserManagement = () => {
   };
 
   // Calculate used days from start date to current date
-  const calculateUsedDays = (startDate: string): number => {
+  const calculateUsedDays = (startDate: string | Date): number => {
     if (!startDate) return 0;
     const start = new Date(startDate);
     const current = new Date();
@@ -90,11 +90,11 @@ const UserManagement = () => {
       const usersWithCalculatedData = data.map(user => {
         const totalDays = calculateDaysBetween(user.subscription_start, user.subscription_end);
         const usedDays = calculateUsedDays(user.subscription_start);
-        const status = calculateStatus(usedDays, user.total_days || totalDays);
+        const status = calculateStatus(usedDays, totalDays);
         
         return {
           ...user,
-          total_days: user.total_days || totalDays, // Use custom total_days if set, otherwise calculated
+          total_days: totalDays,
           used_days: usedDays,
           status: status
         };
@@ -111,9 +111,13 @@ const UserManagement = () => {
   // Add new user
   const addUser = async () => {
     try {
-      const calculatedTotalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
-      const totalDaysToStore = parseInt(formData.total_days) || calculatedTotalDays;
-      const usedDaysToStore = calculateUsedDays(formData.subscription_start);
+      if (!formData.subscription_start || !formData.subscription_end) {
+        toast.error("Please select both start and end dates");
+        return;
+      }
+
+      const totalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
+      const usedDays = calculateUsedDays(formData.subscription_start);
 
       const { data, error } = await supabase
         .from('users')
@@ -122,10 +126,10 @@ const UserManagement = () => {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            subscription_start: formData.subscription_start,
-            subscription_end: formData.subscription_end,
-            total_days: totalDaysToStore,
-            used_days: usedDaysToStore,
+            subscription_start: format(formData.subscription_start, 'yyyy-MM-dd'),
+            subscription_end: format(formData.subscription_end, 'yyyy-MM-dd'),
+            total_days: totalDays,
+            used_days: usedDays,
           },
         ])
         .select();
@@ -150,9 +154,13 @@ const UserManagement = () => {
     if (!editingUser) return;
 
     try {
-      const calculatedTotalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
-      const totalDaysToStore = parseInt(formData.total_days) || calculatedTotalDays;
-      const usedDaysToStore = calculateUsedDays(formData.subscription_start);
+      if (!formData.subscription_start || !formData.subscription_end) {
+        toast.error("Please select both start and end dates");
+        return;
+      }
+
+      const totalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
+      const usedDays = calculateUsedDays(formData.subscription_start);
 
       const { error } = await supabase
         .from('users')
@@ -160,10 +168,10 @@ const UserManagement = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          subscription_start: formData.subscription_start,
-          subscription_end: formData.subscription_end,
-          total_days: totalDaysToStore,
-          used_days: usedDaysToStore,
+          subscription_start: format(formData.subscription_start, 'yyyy-MM-dd'),
+          subscription_end: format(formData.subscription_end, 'yyyy-MM-dd'),
+          total_days: totalDays,
+          used_days: usedDays,
         })
         .eq('id', editingUser.id);
 
@@ -210,10 +218,8 @@ const UserManagement = () => {
       name: "",
       email: "",
       phone: "",
-      subscription_start: "",
-      subscription_end: "",
-      total_days: "",
-      used_days: "0",
+      subscription_start: undefined,
+      subscription_end: undefined,
     });
   };
 
@@ -224,10 +230,8 @@ const UserManagement = () => {
       name: user.name || "",
       email: user.email || "",
       phone: user.phone || "",
-      subscription_start: user.subscription_start || "",
-      subscription_end: user.subscription_end || "",
-      total_days: user.total_days?.toString() || "",
-      used_days: user.used_days?.toString() || "0",
+      subscription_start: user.subscription_start ? new Date(user.subscription_start) : undefined,
+      subscription_end: user.subscription_end ? new Date(user.subscription_end) : undefined,
     });
     setIsEditDialogOpen(true);
   };
@@ -285,54 +289,64 @@ const UserManagement = () => {
         />
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="subscription_start" className="text-right">
+        <Label className="text-right">
           Start Date
         </Label>
-        <Input
-          id="subscription_start"
-          type="date"
-          value={formData.subscription_start}
-          onChange={(e) => setFormData({ ...formData, subscription_start: e.target.value })}
-          className="col-span-3"
-        />
+        <div className="col-span-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.subscription_start && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.subscription_start ? format(formData.subscription_start, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.subscription_start}
+                onSelect={(date) => setFormData({ ...formData, subscription_start: date })}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="subscription_end" className="text-right">
+        <Label className="text-right">
           End Date
         </Label>
-        <Input
-          id="subscription_end"
-          type="date"
-          value={formData.subscription_end}
-          onChange={(e) => setFormData({ ...formData, subscription_end: e.target.value })}
-          className="col-span-3"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="total_days" className="text-right">
-          Total Days
-        </Label>
-        <Input
-          id="total_days"
-          type="number"
-          value={formData.total_days}
-          onChange={(e) => setFormData({ ...formData, total_days: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter total subscription days"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="used_days" className="text-right">
-          Used Days
-        </Label>
-        <Input
-          id="used_days"
-          type="number"
-          value={formData.used_days}
-          onChange={(e) => setFormData({ ...formData, used_days: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter used days"
-        />
+        <div className="col-span-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.subscription_end && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {formData.subscription_end ? format(formData.subscription_end, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.subscription_end}
+                onSelect={(date) => setFormData({ ...formData, subscription_end: date })}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       <div className="flex justify-end space-x-2">
         <Button type="button" variant="outline" onClick={() => {
@@ -376,7 +390,7 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
               <DialogDescription>
-                Create a new user with subscription details.
+                Create a new user with subscription details. Total days and used days will be calculated automatically.
               </DialogDescription>
             </DialogHeader>
             <UserForm onSubmit={addUser} submitText="Add User" />
@@ -529,7 +543,7 @@ const UserManagement = () => {
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information and subscription details.
+              Update user information and subscription details. Total days and used days will be calculated automatically.
             </DialogDescription>
           </DialogHeader>
           <UserForm onSubmit={updateUser} submitText="Update User" />
