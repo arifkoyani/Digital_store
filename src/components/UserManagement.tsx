@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, User, Copy, Plus, ChevronDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -544,6 +545,16 @@ const UserManagement = () => {
     }
   };
 
+  // Group users by email
+  const groupedUsers = users.reduce((acc, user) => {
+    const email = user.email || "Unknown";
+    if (!acc[email]) {
+      acc[email] = [];
+    }
+    acc[email].push(user);
+    return acc;
+  }, {} as Record<string, User[]>);
+
 
 
   return (
@@ -657,7 +668,7 @@ const UserManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Users Table */}
+      {/* Users List - Grouped by Email */}
       <Card>
         <CardHeader>
           <CardTitle>Users List</CardTitle>
@@ -675,95 +686,105 @@ const UserManagement = () => {
               <div className="text-muted-foreground">No users found</div>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Total Days</TableHead>
-                    <TableHead>Used Days</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          {user.name || "N/A"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          {user.email || "N/A"}
-                        </div>
-                      </TableCell>
-                       <TableCell>
-                         <div className="flex items-center gap-2">
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => copyToClipboard(user.phone)}
-                             className="h-6 w-6 p-0"
-                           >
-                             <Copy className="h-3 w-3" />
-                           </Button>
-                           {user.phone || "N/A"}
-                         </div>
-                       </TableCell>
-                      <TableCell>{user.subscription_start || "N/A"}</TableCell>
-                      <TableCell>{user.subscription_end || "N/A"}</TableCell>
-                      <TableCell>{user.total_days || 0}</TableCell>
-                      <TableCell>{user.used_days || 0}</TableCell>
-                      <TableCell>{getStatusBadge(user.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditModal(user)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  This will permanently delete the user "{user.name}" and all associated data.
-                                  This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => deleteUser(user.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <Accordion type="multiple" className="w-full">
+              {Object.entries(groupedUsers).map(([email, emailUsers]) => (
+                <AccordionItem key={email} value={email} className="border rounded-lg mb-2">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{email}</span>
+                      <Badge variant="secondary" className="ml-2">
+                        {emailUsers.length} user{emailUsers.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Start Date</TableHead>
+                            <TableHead>End Date</TableHead>
+                            <TableHead>Total Days</TableHead>
+                            <TableHead>Used Days</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {emailUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  {user.name || "N/A"}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(user.phone)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                  {user.phone || "N/A"}
+                                </div>
+                              </TableCell>
+                              <TableCell>{user.subscription_start || "N/A"}</TableCell>
+                              <TableCell>{user.subscription_end || "N/A"}</TableCell>
+                              <TableCell>{user.total_days || 0}</TableCell>
+                              <TableCell>{user.used_days || 0}</TableCell>
+                              <TableCell>{getStatusBadge(user.status)}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openEditModal(user)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" size="sm">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will permanently delete the user "{user.name}" and all associated data.
+                                          This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => deleteUser(user.id)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           )}
         </CardContent>
       </Card>
