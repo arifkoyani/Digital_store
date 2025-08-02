@@ -282,21 +282,21 @@ const UserManagement = () => {
            editFormData.subscription_end !== undefined;
   };
 
-  const UserFormFields = ({ 
-    formData, 
-    setFormData, 
-    isValid, 
-    onSubmit, 
-    submitText,
-    onReset 
-  }: { 
-    formData: UserFormData; 
-    setFormData: (data: UserFormData) => void; 
-    isValid: boolean;
-    onSubmit: () => void;
-    submitText: string;
-    onReset: () => void;
-  }) => (
+const UserFormFields = ({ 
+  formData, 
+  setFormData, 
+  isValid, 
+  onSubmit, 
+  submitText,
+  onReset 
+}: { 
+  formData: UserFormData; 
+  setFormData: (data: UserFormData) => void; 
+  isValid: boolean;
+  onSubmit: () => void;
+  submitText: string;
+  onReset: () => void;
+}) => (
     <div className="grid gap-6 py-4">
       <div className="grid gap-4">
         <div className="grid grid-cols-4 items-center gap-4">
