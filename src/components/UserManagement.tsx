@@ -49,6 +49,24 @@ const UserManagement = () => {
     used_days: "0",
   });
 
+  // Calculate days between two dates
+  const calculateDaysBetween = (startDate: string, endDate: string): number => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Calculate used days from start date to current date
+  const calculateUsedDays = (startDate: string): number => {
+    if (!startDate) return 0;
+    const start = new Date(startDate);
+    const current = new Date();
+    const diffTime = current.getTime() - start.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  };
+
   // Calculate status based on used_days and total_days
   const calculateStatus = (usedDays: number, totalDays: number): string => {
     return usedDays > totalDays ? "expired" : "active";
@@ -72,13 +90,21 @@ const UserManagement = () => {
         return;
       }
 
-      // Update status for each user
-      const usersWithCalculatedStatus = data.map(user => ({
-        ...user,
-        status: calculateStatus(user.used_days || 0, user.total_days || 0)
-      }));
+      // Update days and status for each user based on dates
+      const usersWithCalculatedData = data.map(user => {
+        const totalDays = calculateDaysBetween(user.subscription_start, user.subscription_end);
+        const usedDays = calculateUsedDays(user.subscription_start);
+        const status = calculateStatus(usedDays, user.total_days || totalDays);
+        
+        return {
+          ...user,
+          total_days: user.total_days || totalDays, // Use custom total_days if set, otherwise calculated
+          used_days: usedDays,
+          status: status
+        };
+      });
 
-      setUsers(usersWithCalculatedStatus || []);
+      setUsers(usersWithCalculatedData || []);
     } catch (error) {
       toast({
         title: "Error",
@@ -93,10 +119,9 @@ const UserManagement = () => {
   // Add new user
   const addUser = async () => {
     try {
-      const calculatedStatus = calculateStatus(
-        parseInt(formData.used_days) || 0, 
-        parseInt(formData.total_days) || 0
-      );
+      const calculatedTotalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
+      const totalDaysToStore = parseInt(formData.total_days) || calculatedTotalDays;
+      const usedDaysToStore = calculateUsedDays(formData.subscription_start);
 
       const { data, error } = await supabase
         .from('users')
@@ -107,8 +132,8 @@ const UserManagement = () => {
             phone: formData.phone,
             subscription_start: formData.subscription_start,
             subscription_end: formData.subscription_end,
-            total_days: parseInt(formData.total_days) || 0,
-            used_days: parseInt(formData.used_days) || 0,
+            total_days: totalDaysToStore,
+            used_days: usedDaysToStore,
           },
         ])
         .select();
@@ -145,10 +170,9 @@ const UserManagement = () => {
     if (!editingUser) return;
 
     try {
-      const calculatedStatus = calculateStatus(
-        parseInt(formData.used_days) || 0, 
-        parseInt(formData.total_days) || 0
-      );
+      const calculatedTotalDays = calculateDaysBetween(formData.subscription_start, formData.subscription_end);
+      const totalDaysToStore = parseInt(formData.total_days) || calculatedTotalDays;
+      const usedDaysToStore = calculateUsedDays(formData.subscription_start);
 
       const { error } = await supabase
         .from('users')
@@ -158,8 +182,8 @@ const UserManagement = () => {
           phone: formData.phone,
           subscription_start: formData.subscription_start,
           subscription_end: formData.subscription_end,
-          total_days: parseInt(formData.total_days) || 0,
-          used_days: parseInt(formData.used_days) || 0,
+          total_days: totalDaysToStore,
+          used_days: usedDaysToStore,
         })
         .eq('id', editingUser.id);
 
@@ -405,7 +429,7 @@ const UserManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -434,17 +458,6 @@ const UserManagement = () => {
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
               {users.filter(user => user.status === "expired").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Days</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.reduce((sum, user) => sum + (user.total_days || 0), 0)}
             </div>
           </CardContent>
         </Card>
