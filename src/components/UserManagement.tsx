@@ -440,7 +440,7 @@ const UserManagement = () => {
       <div className="flex justify-center">
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-32">Add User</Button>
+            <Button className="px-40">Add User</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
