@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { Home, Plus, Minus, Trash2, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AccountFormData {
+  company: string;
   email: string;
   email_password: string;
   card_number: string;
@@ -17,7 +19,6 @@ interface AccountFormData {
   cvc: string;
   bank_name: string;
   owner: string;
-  company: string;
 }
 
 interface Account {
@@ -48,6 +49,21 @@ const AccountFormFields = ({
 }) => (
   <div className="grid gap-6 py-4">
     <div className="grid gap-4">
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="company" className="text-right font-medium">
+          Company <span className="text-destructive">*</span>
+        </Label>
+        <Select value={formData.company} onValueChange={(value) => setFormData({ ...formData, company: value })}>
+          <SelectTrigger className="col-span-3">
+            <SelectValue placeholder="Select company" />
+          </SelectTrigger>
+          <SelectContent className="bg-background border shadow-lg z-50">
+            <SelectItem value="Netflix">Netflix</SelectItem>
+            <SelectItem value="Amazon">Amazon</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
       <div className="grid grid-cols-4 items-center gap-4">
         <Label htmlFor="account-email" className="text-right font-medium">
           Email <span className="text-destructive">*</span>
@@ -148,19 +164,6 @@ const AccountFormFields = ({
           required
         />
       </div>
-      
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="company" className="text-right font-medium">
-          Company
-        </Label>
-        <Input
-          id="company"
-          value={formData.company}
-          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-          className="col-span-3"
-          placeholder="Enter company name"
-        />
-      </div>
     </div>
     
     <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -182,9 +185,12 @@ const Store = () => {
   const navigate = useNavigate();
   const [isAddAccountDialogOpen, setIsAddAccountDialogOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [amazonAccounts, setAmazonAccounts] = useState<Account[]>([]);
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
   const [isNetflixExpanded, setIsNetflixExpanded] = useState(false);
+  const [isAmazonExpanded, setIsAmazonExpanded] = useState(false);
   const [accountFormData, setAccountFormData] = useState<AccountFormData>({
+    company: "",
     email: "",
     email_password: "",
     card_number: "",
@@ -192,12 +198,12 @@ const Store = () => {
     cvc: "",
     bank_name: "",
     owner: "",
-    company: "",
   });
 
   // Fetch accounts on component mount
   useEffect(() => {
     fetchAccounts();
+    fetchAmazonAccounts();
   }, []);
 
   const fetchAccounts = async () => {
@@ -208,13 +214,31 @@ const Store = () => {
         .order('email');
 
       if (error) {
-        toast.error("Failed to fetch accounts");
+        toast.error("Failed to fetch Netflix accounts");
         return;
       }
 
       setAccounts((data as unknown as Account[]) || []);
     } catch (error) {
-      toast.error("An error occurred while fetching accounts");
+      toast.error("An error occurred while fetching Netflix accounts");
+    }
+  };
+
+  const fetchAmazonAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('amazon' as any)
+        .select('*')
+        .order('email');
+
+      if (error) {
+        toast.error("Failed to fetch Amazon accounts");
+        return;
+      }
+
+      setAmazonAccounts((data as unknown as Account[]) || []);
+    } catch (error) {
+      toast.error("An error occurred while fetching Amazon accounts");
     }
   };
 
@@ -233,10 +257,11 @@ const Store = () => {
   };
 
   // Delete account
-  const deleteAccount = async (accountId: string, email: string) => {
+  const deleteAccount = async (accountId: string, email: string, company: string) => {
     try {
+      const tableName = company === 'Amazon' ? 'amazon' : 'accounts';
       const { error } = await supabase
-        .from('accounts' as any)
+        .from(tableName as any)
         .delete()
         .eq('id', accountId);
 
@@ -246,7 +271,11 @@ const Store = () => {
       }
 
       toast.success(`Account ${email} deleted successfully`);
-      fetchAccounts(); // Refresh the accounts list
+      if (company === 'Amazon') {
+        fetchAmazonAccounts();
+      } else {
+        fetchAccounts();
+      }
       // Close the expanded view if it was open
       setExpandedAccounts(prev => {
         const newSet = new Set(prev);
@@ -271,13 +300,19 @@ const Store = () => {
   // Add new account
   const addAccount = async () => {
     try {
+      if (!accountFormData.company) {
+        toast.error("Please select a company");
+        return;
+      }
+      
       if (!accountFormData.expire_date) {
         toast.error("Please enter an expiry date");
         return;
       }
 
+      const tableName = accountFormData.company === 'Amazon' ? 'amazon' : 'accounts';
       const { data, error } = await supabase
-        .from('accounts' as any)
+        .from(tableName as any)
         .insert([
           {
             email: accountFormData.email,
@@ -296,10 +331,15 @@ const Store = () => {
         return;
       }
 
-      toast.success("Account added successfully");
+      toast.success(`${accountFormData.company} account added successfully`);
       setIsAddAccountDialogOpen(false);
       resetAccountForm();
-      fetchAccounts(); // Refresh the accounts list
+      // Refresh the appropriate accounts list
+      if (accountFormData.company === 'Amazon') {
+        fetchAmazonAccounts();
+      } else {
+        fetchAccounts();
+      }
     } catch (error) {
       toast.error("An unexpected error occurred");
     }
@@ -308,6 +348,7 @@ const Store = () => {
   // Reset account form
   const resetAccountForm = () => {
     setAccountFormData({
+      company: "",
       email: "",
       email_password: "",
       card_number: "",
@@ -315,13 +356,13 @@ const Store = () => {
       cvc: "",
       bank_name: "",
       owner: "",
-      company: "",
     });
   };
 
   // Check if account form is valid
   const isAccountFormValid = () => {
-    return accountFormData.email.trim() !== "" && 
+    return accountFormData.company.trim() !== "" &&
+           accountFormData.email.trim() !== "" && 
            accountFormData.email_password.trim() !== "" && 
            accountFormData.card_number.trim() !== "" && 
            accountFormData.expire_date.trim() !== "" && 
@@ -375,7 +416,7 @@ const Store = () => {
         </div>
 
         {/* Netflix Tab Section */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
           <Card className="overflow-hidden">
             <CardHeader 
               className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -407,7 +448,7 @@ const Store = () => {
               <CardContent className="pt-0">
                 {accounts.length === 0 ? (
                   <div className="p-8 text-center">
-                    <p className="text-muted-foreground">No accounts found. Add your first account above.</p>
+                    <p className="text-muted-foreground">No Netflix accounts found. Add your first account above.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -429,7 +470,204 @@ const Store = () => {
                                 className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 mr-[150px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  deleteAccount(account.id, account.email);
+                                  deleteAccount(account.id, account.email, "Netflix");
+                                }}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleAccountExpansion(account.id);
+                                }}
+                              >
+                                {expandedAccounts.has(account.id) ? (
+                                  <Minus size={16} />
+                                ) : (
+                                  <Plus size={16} />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        {expandedAccounts.has(account.id) && (
+                          <CardContent className="pt-0">
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">Password:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.email_password}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.email_password, "Password")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">Card Number:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.card_number}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.card_number, "Card Number")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">Expire Date:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.expire_date}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.expire_date, "Expire Date")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">CVC:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.cvc}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.cvc, "CVC")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">Bank Name:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.bank_name || "Not specified"}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.bank_name || "", "Bank Name")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                  <span className="font-medium text-muted-foreground">Owner:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono bg-background px-2 py-1 rounded border">
+                                      {account.Owner || "Not specified"}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="p-1 h-8 w-8"
+                                      onClick={() => copyToClipboard(account.Owner || "", "Owner")}
+                                    >
+                                      <Copy size={14} />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Amazon Tab Section */}
+          <Card className="overflow-hidden">
+            <CardHeader 
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => setIsAmazonExpanded(!isAmazonExpanded)}
+            >
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-semibold flex items-center gap-2">
+                  <span className="text-primary">Amazon</span>
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAmazonExpanded(!isAmazonExpanded);
+                  }}
+                >
+                  {isAmazonExpanded ? (
+                    <Minus size={16} />
+                  ) : (
+                    <Plus size={16} />
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+            
+            {isAmazonExpanded && (
+              <CardContent className="pt-0">
+                {amazonAccounts.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-muted-foreground">No Amazon accounts found. Add your first account above.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {amazonAccounts.map((account) => (
+                      <Card key={account.id} className="overflow-hidden">
+                        <CardHeader 
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => toggleAccountExpansion(account.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <span className="text-primary">Email:</span>
+                              <span className="font-normal">{account.email}</span>
+                            </CardTitle>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 mr-[150px]"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteAccount(account.id, account.email, "Amazon");
                                 }}
                               >
                                 <Trash2 size={16} />
