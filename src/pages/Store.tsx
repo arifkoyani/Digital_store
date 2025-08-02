@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, Plus } from "lucide-react";
+import { Home, Plus, Minus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AccountFormData {
@@ -16,6 +17,17 @@ interface AccountFormData {
   cvc: string;
   bank_name: string;
   owner: string;
+}
+
+interface Account {
+  id: string;
+  email: string;
+  email_password: string;
+  card_number: string;
+  expire_date: string;
+  cvc: string;
+  bank_name: string | null;
+  Owner: string | null;
 }
 
 const AccountFormFields = ({ 
@@ -155,6 +167,8 @@ const AccountFormFields = ({
 const Store = () => {
   const navigate = useNavigate();
   const [isAddAccountDialogOpen, setIsAddAccountDialogOpen] = useState(false);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
   const [accountFormData, setAccountFormData] = useState<AccountFormData>({
     email: "",
     email_password: "",
@@ -165,8 +179,41 @@ const Store = () => {
     owner: "",
   });
 
+  // Fetch accounts on component mount
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('accounts' as any)
+        .select('*')
+        .order('email');
+
+      if (error) {
+        toast.error("Failed to fetch accounts");
+        return;
+      }
+
+      setAccounts((data as unknown as Account[]) || []);
+    } catch (error) {
+      toast.error("An error occurred while fetching accounts");
+    }
+  };
+
   const handleDashboardClick = () => {
     navigate("/");
+  };
+
+  const toggleAccountExpansion = (accountId: string) => {
+    const newExpanded = new Set(expandedAccounts);
+    if (newExpanded.has(accountId)) {
+      newExpanded.delete(accountId);
+    } else {
+      newExpanded.add(accountId);
+    }
+    setExpandedAccounts(newExpanded);
   };
 
   // Add new account
@@ -200,6 +247,7 @@ const Store = () => {
       toast.success("Account added successfully");
       setIsAddAccountDialogOpen(false);
       resetAccountForm();
+      fetchAccounts(); // Refresh the accounts list
     } catch (error) {
       toast.error("An unexpected error occurred");
     }
@@ -246,7 +294,7 @@ const Store = () => {
           <p className="text-muted-foreground mt-2">Manage your account information</p>
         </div>
         
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-8">
           <Dialog open={isAddAccountDialogOpen} onOpenChange={setIsAddAccountDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
@@ -271,6 +319,104 @@ const Store = () => {
               />
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Accounts Display Section */}
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-xl font-semibold mb-6">Stored Accounts</h2>
+          
+          {accounts.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">No accounts found. Add your first account above.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {accounts.map((account) => (
+                <Card key={account.id} className="overflow-hidden">
+                  <CardHeader 
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => toggleAccountExpansion(account.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <span className="text-primary">Email:</span>
+                        <span className="font-normal">{account.email}</span>
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleAccountExpansion(account.id);
+                        }}
+                      >
+                        {expandedAccounts.has(account.id) ? (
+                          <Minus size={16} />
+                        ) : (
+                          <Plus size={16} />
+                        )}
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  
+                  {expandedAccounts.has(account.id) && (
+                    <CardContent className="pt-0">
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">Password:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.email_password}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">Card Number:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.card_number}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">Expire Date:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.expire_date}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">CVC:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.cvc}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">Bank Name:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.bank_name || "Not specified"}
+                            </span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                            <span className="font-medium text-muted-foreground">Owner:</span>
+                            <span className="font-mono bg-background px-2 py-1 rounded border">
+                              {account.Owner || "Not specified"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
