@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,7 +178,8 @@ const UserFormFields = ({
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("add");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [addFormData, setAddFormData] = useState<UserFormData>({
     name: "",
@@ -285,7 +287,7 @@ const UserManagement = () => {
       }
 
       toast.success("User added successfully");
-
+      setIsAddDialogOpen(false);
       resetAddForm();
       fetchUsers();
     } catch (error) {
@@ -325,7 +327,7 @@ const UserManagement = () => {
       }
 
       toast.success("User updated successfully");
-
+      setIsEditDialogOpen(false);
       setEditingUser(null);
       resetEditForm();
       fetchUsers();
@@ -377,8 +379,8 @@ const UserManagement = () => {
     });
   };
 
-  // Open edit tab
-  const openEditTab = (user: User) => {
+  // Open edit modal
+  const openEditModal = (user: User) => {
     setEditingUser(user);
     setEditFormData({
       name: user.name || "",
@@ -387,7 +389,7 @@ const UserManagement = () => {
       subscription_start: user.subscription_start ? new Date(user.subscription_start) : undefined,
       subscription_end: user.subscription_end ? new Date(user.subscription_end) : undefined,
     });
-    setActiveTab("edit");
+    setIsEditDialogOpen(true);
   };
 
   // Load users on component mount
@@ -472,66 +474,63 @@ const UserManagement = () => {
         </Card>
       </div>
 
-      {/* User Management Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="add">Add New User</TabsTrigger>
-          <TabsTrigger value="edit">Edit User</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="add" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Add New User</CardTitle>
-              <CardDescription>
+      {/* Action Buttons */}
+      <div className="flex gap-4">
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>Add User</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
                 Create a new user with subscription details. Total days and used days will be calculated automatically.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UserFormFields
-                formData={addFormData}
-                setFormData={setAddFormData}
-                isValid={isAddFormValid()}
-                onSubmit={addUser}
-                submitText="Add User"
-                onReset={resetAddForm}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </DialogDescription>
+            </DialogHeader>
+            <UserFormFields
+              formData={addFormData}
+              setFormData={setAddFormData}
+              isValid={isAddFormValid()}
+              onSubmit={addUser}
+              submitText="Add User"
+              onReset={resetAddForm}
+            />
+          </DialogContent>
+        </Dialog>
 
-        <TabsContent value="edit" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit User</CardTitle>
-              <CardDescription>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">Edit User</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+              <DialogDescription>
                 {editingUser 
                   ? `Update information for ${editingUser.name}. Total days and used days will be calculated automatically.`
                   : "Select a user from the table below to edit their information."
                 }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {editingUser ? (
-                <UserFormFields
-                  formData={editFormData}
-                  setFormData={setEditFormData}
-                  isValid={isEditFormValid()}
-                  onSubmit={updateUser}
-                  submitText="Update User"
-                  onReset={resetEditForm}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-32">
-                  <div className="text-muted-foreground">
-                    Click the edit button next to a user in the table below to start editing.
-                  </div>
+              </DialogDescription>
+            </DialogHeader>
+            {editingUser ? (
+              <UserFormFields
+                formData={editFormData}
+                setFormData={setEditFormData}
+                isValid={isEditFormValid()}
+                onSubmit={updateUser}
+                submitText="Update User"
+                onReset={resetEditForm}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-32">
+                <div className="text-muted-foreground">
+                  Click the edit button next to a user in the table below to start editing.
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Users Table */}
       <Card>
@@ -597,7 +596,7 @@ const UserManagement = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => openEditTab(user)}
+                            onClick={() => openEditModal(user)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
