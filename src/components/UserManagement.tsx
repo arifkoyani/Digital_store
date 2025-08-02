@@ -16,7 +16,7 @@ import { Plus, Edit, Trash2, Users, Calendar as CalendarIcon, Timer, Mail, Phone
 import { cn } from "@/lib/utils";
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
@@ -192,7 +192,7 @@ const UserManagement = () => {
   };
 
   // Delete user
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (userId: number) => {
     try {
       const { error } = await supabase
         .from('users')
