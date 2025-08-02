@@ -17,6 +17,7 @@ interface AccountFormData {
   cvc: string;
   bank_name: string;
   owner: string;
+  company: string;
 }
 
 interface Account {
@@ -147,6 +148,19 @@ const AccountFormFields = ({
           required
         />
       </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="company" className="text-right font-medium">
+          Company
+        </Label>
+        <Input
+          id="company"
+          value={formData.company}
+          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+          className="col-span-3"
+          placeholder="Enter company name"
+        />
+      </div>
     </div>
     
     <div className="flex justify-end space-x-2 pt-4 border-t">
@@ -178,6 +192,7 @@ const Store = () => {
     cvc: "",
     bank_name: "",
     owner: "",
+    company: "",
   });
 
   // Fetch accounts on component mount
@@ -300,6 +315,7 @@ const Store = () => {
       cvc: "",
       bank_name: "",
       owner: "",
+      company: "",
     });
   };
 
