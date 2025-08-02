@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, Plus, Minus } from "lucide-react";
+import { Home, Plus, Minus, Trash2, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AccountFormData {
@@ -216,6 +216,42 @@ const Store = () => {
     setExpandedAccounts(newExpanded);
   };
 
+  // Delete account
+  const deleteAccount = async (accountId: string, email: string) => {
+    try {
+      const { error } = await supabase
+        .from('accounts' as any)
+        .delete()
+        .eq('id', accountId);
+
+      if (error) {
+        toast.error("Failed to delete account");
+        return;
+      }
+
+      toast.success(`Account ${email} deleted successfully`);
+      fetchAccounts(); // Refresh the accounts list
+      // Close the expanded view if it was open
+      setExpandedAccounts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(accountId);
+        return newSet;
+      });
+    } catch (error) {
+      toast.error("An error occurred while deleting account");
+    }
+  };
+
+  // Copy to clipboard
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied to clipboard`);
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+    }
+  };
+
   // Add new account
   const addAccount = async () => {
     try {
@@ -344,21 +380,34 @@ const Store = () => {
                         <span className="text-primary">Email:</span>
                         <span className="font-normal">{account.email}</span>
                       </CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleAccountExpansion(account.id);
-                        }}
-                      >
-                        {expandedAccounts.has(account.id) ? (
-                          <Minus size={16} />
-                        ) : (
-                          <Plus size={16} />
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteAccount(account.id, account.email);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleAccountExpansion(account.id);
+                          }}
+                        >
+                          {expandedAccounts.has(account.id) ? (
+                            <Minus size={16} />
+                          ) : (
+                            <Plus size={16} />
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   
@@ -368,46 +417,106 @@ const Store = () => {
                         <div className="space-y-3">
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">Password:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.email_password}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.email_password}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.email_password, "Password")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                           
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">Card Number:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.card_number}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.card_number}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.card_number, "Card Number")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                           
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">Expire Date:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.expire_date}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.expire_date}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.expire_date, "Expire Date")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                         
                         <div className="space-y-3">
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">CVC:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.cvc}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.cvc}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.cvc, "CVC")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                           
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">Bank Name:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.bank_name || "Not specified"}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.bank_name || "Not specified"}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.bank_name || "", "Bank Name")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                           
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
                             <span className="font-medium text-muted-foreground">Owner:</span>
-                            <span className="font-mono bg-background px-2 py-1 rounded border">
-                              {account.Owner || "Not specified"}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono bg-background px-2 py-1 rounded border">
+                                {account.Owner || "Not specified"}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-8 w-8"
+                                onClick={() => copyToClipboard(account.Owner || "", "Owner")}
+                              >
+                                <Copy size={14} />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
