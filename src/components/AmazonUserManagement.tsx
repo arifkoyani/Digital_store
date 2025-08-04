@@ -289,18 +289,21 @@ const AmazonUserManagement = () => {
   // Fetch all accounts from amazon table
   const fetchAccounts = async () => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('amazon')
         .select('*')
         .order('email');
       
       if (error) {
+        console.error("Error fetching Amazon accounts:", error);
         toast.error("Failed to fetch Amazon accounts");
         return;
       }
       
+      console.log("Amazon accounts fetched:", data);
       setAccounts(data || []);
     } catch (error) {
+      console.error("Unexpected error fetching Amazon accounts:", error);
       toast.error("An unexpected error occurred while fetching Amazon accounts");
     }
   };
