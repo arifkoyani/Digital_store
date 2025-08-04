@@ -30,7 +30,7 @@ const Dashboard = () => {
       <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden py-40"
             onClick={handleNetflixClick}
             style={{
               backgroundImage: `url(${netflixBg})`,
@@ -47,7 +47,7 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden py-40"
             onClick={handleAmazonClick}
             style={{
               backgroundImage: `url(${amazonPrimeBg})`,
@@ -64,7 +64,7 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 py-40"
             onClick={handleStoreClick}
           >
             <CardHeader>
