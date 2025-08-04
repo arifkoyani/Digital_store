@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import netflixBg from "@/assets/netflix-bg.png";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -28,15 +29,21 @@ const Dashboard = () => {
       <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden"
             onClick={handleNetflixClick}
+            style={{
+              backgroundImage: `url(${netflixBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            <CardHeader>
-              <CardTitle className="text-xl text-center">Netflix</CardTitle>
+            <div className="absolute inset-0 bg-black/40" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-xl text-center text-white">Netflix</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="flex justify-center items-center h-20">
-                <p className="text-muted-foreground">Click to manage Netflix users</p>
+                <p className="text-white/90">Click to manage Netflix users</p>
               </div>
             </CardContent>
           </Card>
