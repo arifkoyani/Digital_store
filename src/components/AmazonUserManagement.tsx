@@ -594,9 +594,7 @@ const AmazonUserManagement = () => {
 
   // Fetch users when accounts change
   useEffect(() => {
-    if (accounts.length > 0) {
-      fetchUsers();
-    }
+    fetchUsers();
   }, [accounts]);
 
   return (
