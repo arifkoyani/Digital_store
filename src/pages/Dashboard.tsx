@@ -43,9 +43,6 @@ const Dashboard = () => {
               <CardTitle className="text-xl text-center text-white">Netflix</CardTitle>
             </CardHeader>
             <CardContent className="relative z-10">
-              <div className="flex justify-center items-center h-20">
-                <p className="text-white/90">Click to manage Netflix users</p>
-              </div>
             </CardContent>
           </Card>
 
@@ -62,10 +59,7 @@ const Dashboard = () => {
             <CardHeader className="relative z-10 pb-2">
               <CardTitle className="text-xl text-center text-white">Amazon Prime</CardTitle>
             </CardHeader>
-            <CardContent className="relative z-10 pt-2">
-              <div className="flex justify-center items-center h-16">
-                <p className="text-white/90">Click to manage Amazon Prime users</p>
-              </div>
+            <CardContent className="relative z-10">
             </CardContent>
           </Card>
 
@@ -77,9 +71,6 @@ const Dashboard = () => {
               <CardTitle className="text-xl text-center">Store</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center items-center h-20">
-                <p className="text-muted-foreground">Click to access store</p>
-              </div>
             </CardContent>
           </Card>
         </div>
