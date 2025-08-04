@@ -247,9 +247,22 @@ const UserManagement = () => {
   };
 
   // Fetch users that are associated with Netflix accounts only
-  const fetchUsers = async () => {
+  const fetchUsers = async (accountsList?: any[]) => {
     try {
       setLoading(true);
+      
+      // Fetch Netflix accounts first to ensure we have the email list
+      const { data: accountsData, error: accountsError } = await supabase
+        .from('accounts')
+        .select('*')
+        .order('email');
+      
+      if (accountsError) {
+        console.error("Error fetching Netflix accounts:", accountsError);
+        toast.error("Failed to fetch Netflix accounts");
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -260,8 +273,8 @@ const UserManagement = () => {
         return;
       }
 
-      // Get list of Netflix account emails
-      const netflixEmails = accounts.map(account => account.email);
+      // Get list of Netflix account emails (use passed accounts or fetched accounts)
+      const netflixEmails = (accountsList || accountsData || []).map(account => account.email);
 
       // Filter users to only include those with emails from Netflix accounts
       const netflixUsers = data.filter(user => netflixEmails.includes(user.email));
@@ -542,8 +555,12 @@ const UserManagement = () => {
 
   // Load users on component mount
   useEffect(() => {
-    fetchUsers();
-    fetchAccounts();
+    const loadData = async () => {
+      // First fetch accounts, then fetch users with account data
+      await fetchAccounts();
+      await fetchUsers();
+    };
+    loadData();
   }, []);
 
   const getStatusBadge = (status: string) => {
