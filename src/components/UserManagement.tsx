@@ -19,7 +19,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { cn } from "@/lib/utils";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
@@ -413,7 +413,7 @@ const UserManagement = () => {
   };
 
   // Delete user
-  const deleteUser = async (userId: number) => {
+  const deleteUser = async (userId: string) => {
     try {
       // First, get the user data to find the associated email
       const { data: userData, error: getUserError } = await supabase
@@ -693,9 +693,14 @@ const UserManagement = () => {
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">{email}</span>
-                      <Badge variant="secondary" className="ml-2">
-                        {emailUsers.length} user{emailUsers.length !== 1 ? 's' : ''}
-                      </Badge>
+                      <div className="flex items-center gap-2 ml-2">
+                        <Badge variant="default" className="bg-success text-success-foreground">
+                          {emailUsers.filter(user => user.status === "active").length} active
+                        </Badge>
+                        <Badge variant="destructive">
+                          {emailUsers.filter(user => user.status === "expired").length} expired
+                        </Badge>
+                      </div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
