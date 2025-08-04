@@ -757,9 +757,23 @@ const UserManagement = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => updateAccountPassword(email)}
-                            className="min-w-[80px]"
+                            className="flex items-center gap-2"
                           >
+                            <Edit className="h-4 w-4" />
                             Update
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 min-w-[200px]">
+                          <span className="text-sm font-mono bg-background px-2 py-1 rounded border flex-1">
+                            {accounts.find(acc => acc.email === email)?.email_password || 'No password'}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(accounts.find(acc => acc.email === email)?.email_password || '')}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
