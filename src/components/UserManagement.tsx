@@ -246,7 +246,7 @@ const UserManagement = () => {
     return usedDays > totalDays ? "expired" : "active";
   };
 
-  // Fetch all users
+  // Fetch users that are associated with Netflix accounts only
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -260,8 +260,14 @@ const UserManagement = () => {
         return;
       }
 
+      // Get list of Netflix account emails
+      const netflixEmails = accounts.map(account => account.email);
+
+      // Filter users to only include those with emails from Netflix accounts
+      const netflixUsers = data.filter(user => netflixEmails.includes(user.email));
+
       // Update days and status for each user based on dates
-      const usersWithCalculatedData = data.map(user => {
+      const usersWithCalculatedData = netflixUsers.map(user => {
         const totalDays = calculateDaysBetween(user.subscription_start, user.subscription_end);
         const usedDays = calculateUsedDays(user.subscription_start);
         const status = calculateStatus(usedDays, totalDays);
