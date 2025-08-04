@@ -8,6 +8,10 @@ const Dashboard = () => {
     navigate("/netflix");
   };
 
+  const handleAmazonClick = () => {
+    navigate("/amazon");
+  };
+
   const handleStoreClick = () => {
     navigate("/store");
   };
@@ -37,7 +41,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-200">
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={handleAmazonClick}
+          >
             <CardHeader>
               <CardTitle className="text-xl text-center">Amazon Prime</CardTitle>
             </CardHeader>
