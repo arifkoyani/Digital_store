@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import netflixBg from "@/assets/netflix-bg.png";
 import amazonPrimeBg from "@/assets/amazon-prime-bg.png";
+import storeBg from "@/assets/store-bg.jpg";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -64,13 +65,19 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 py-10"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 py-10 relative overflow-hidden"
             onClick={handleStoreClick}
+            style={{
+              backgroundImage: `url(${storeBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            <CardHeader>
-              <CardTitle className="text-xl text-center">Store</CardTitle>
+            <div className="absolute inset-0 bg-black/40" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-xl text-center text-white">Store</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
             </CardContent>
           </Card>
         </div>
