@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import netflixBg from "@/assets/netflix-bg.png";
+import amazonPrimeBg from "@/assets/amazon-prime-bg.png";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -49,15 +50,21 @@ const Dashboard = () => {
           </Card>
 
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 relative overflow-hidden"
             onClick={handleAmazonClick}
+            style={{
+              backgroundImage: `url(${amazonPrimeBg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            <CardHeader>
-              <CardTitle className="text-xl text-center">Amazon Prime</CardTitle>
+            <div className="absolute inset-0 bg-black/40" />
+            <CardHeader className="relative z-10 pb-2">
+              <CardTitle className="text-xl text-center text-white">Amazon Prime</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="flex justify-center items-center h-20">
-                <p className="text-muted-foreground">Click to manage Amazon Prime users</p>
+            <CardContent className="relative z-10 pt-2">
+              <div className="flex justify-center items-center h-16">
+                <p className="text-white/90">Click to manage Amazon Prime users</p>
               </div>
             </CardContent>
           </Card>
