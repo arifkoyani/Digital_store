@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Home, Plus, Minus, Trash2, Copy } from "lucide-react";
+import { Home, Plus, Minus, Trash2, Copy, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AccountFormData {
@@ -184,12 +184,24 @@ const AccountFormFields = ({
 const Store = () => {
   const navigate = useNavigate();
   const [isAddAccountDialogOpen, setIsAddAccountDialogOpen] = useState(false);
+  const [isEditAccountDialogOpen, setIsEditAccountDialogOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [amazonAccounts, setAmazonAccounts] = useState<Account[]>([]);
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
   const [isNetflixExpanded, setIsNetflixExpanded] = useState(false);
   const [isAmazonExpanded, setIsAmazonExpanded] = useState(false);
   const [accountFormData, setAccountFormData] = useState<AccountFormData>({
+    company: "",
+    email: "",
+    email_password: "",
+    card_number: "",
+    expire_date: "",
+    cvc: "",
+    bank_name: "",
+    owner: "",
+  });
+  const [editAccountFormData, setEditAccountFormData] = useState<AccountFormData>({
     company: "",
     email: "",
     email_password: "",
@@ -345,9 +357,84 @@ const Store = () => {
     }
   };
 
+  // Edit account
+  const editAccount = async () => {
+    if (!editingAccount) return;
+
+    try {
+      if (!editAccountFormData.company) {
+        toast.error("Please select a company");
+        return;
+      }
+
+      const tableName = editingAccount.id.includes('amazon') || editAccountFormData.company === 'Amazon' ? 'amazon' : 'accounts';
+      const { error } = await supabase
+        .from(tableName as any)
+        .update({
+          email: editAccountFormData.email,
+          email_password: editAccountFormData.email_password,
+          card_number: editAccountFormData.card_number,
+          expire_date: editAccountFormData.expire_date,
+          cvc: editAccountFormData.cvc,
+          bank_name: editAccountFormData.bank_name || null,
+          Owner: editAccountFormData.owner,
+        })
+        .eq('id', editingAccount.id);
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success(`Account updated successfully`);
+      setIsEditAccountDialogOpen(false);
+      setEditingAccount(null);
+      resetEditAccountForm();
+      
+      // Refresh the appropriate accounts list
+      if (editAccountFormData.company === 'Amazon') {
+        fetchAmazonAccounts();
+      } else {
+        fetchAccounts();
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  // Open edit modal
+  const openEditModal = (account: Account, company: string) => {
+    setEditingAccount(account);
+    setEditAccountFormData({
+      company: company,
+      email: account.email,
+      email_password: account.email_password,
+      card_number: account.card_number,
+      expire_date: account.expire_date,
+      cvc: account.cvc,
+      bank_name: account.bank_name || "",
+      owner: account.Owner || "",
+    });
+    setIsEditAccountDialogOpen(true);
+  };
+
   // Reset account form
   const resetAccountForm = () => {
     setAccountFormData({
+      company: "",
+      email: "",
+      email_password: "",
+      card_number: "",
+      expire_date: "",
+      cvc: "",
+      bank_name: "",
+      owner: "",
+    });
+  };
+
+  // Reset edit account form
+  const resetEditAccountForm = () => {
+    setEditAccountFormData({
       company: "",
       email: "",
       email_password: "",
@@ -368,6 +455,17 @@ const Store = () => {
            accountFormData.expire_date.trim() !== "" && 
            accountFormData.cvc.trim() !== "" &&
            accountFormData.owner.trim() !== "";
+  };
+
+  // Check if edit account form is valid
+  const isEditAccountFormValid = () => {
+    return editAccountFormData.company.trim() !== "" &&
+           editAccountFormData.email.trim() !== "" && 
+           editAccountFormData.email_password.trim() !== "" && 
+           editAccountFormData.card_number.trim() !== "" && 
+           editAccountFormData.expire_date.trim() !== "" && 
+           editAccountFormData.cvc.trim() !== "" &&
+           editAccountFormData.owner.trim() !== "";
   };
 
   return (
@@ -462,6 +560,17 @@ const Store = () => {
                             <CardTitle className="text-lg flex items-center gap-2">
                               <span className="text-primary">Email:</span>
                               <span className="font-normal">{account.email}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-6 w-6 ml-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(account, "Netflix");
+                                }}
+                              >
+                                <Edit size={12} />
+                              </Button>
                             </CardTitle>
                             <div className="flex items-center gap-2">
                               <Button
@@ -659,6 +768,17 @@ const Store = () => {
                             <CardTitle className="text-lg flex items-center gap-2">
                               <span className="text-primary">Email:</span>
                               <span className="font-normal">{account.email}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="p-1 h-6 w-6 ml-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(account, "Amazon");
+                                }}
+                              >
+                                <Edit size={12} />
+                              </Button>
                             </CardTitle>
                             <div className="flex items-center gap-2">
                               <Button
@@ -810,6 +930,26 @@ const Store = () => {
             )}
           </Card>
         </div>
+
+        {/* Edit Account Modal */}
+        <Dialog open={isEditAccountDialogOpen} onOpenChange={setIsEditAccountDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Account</DialogTitle>
+              <DialogDescription>
+                Update account information including payment and authentication details.
+              </DialogDescription>
+            </DialogHeader>
+            <AccountFormFields
+              formData={editAccountFormData}
+              setFormData={setEditAccountFormData}
+              isValid={isEditAccountFormValid()}
+              onSubmit={editAccount}
+              submitText="Update Account"
+              onReset={resetEditAccountForm}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
