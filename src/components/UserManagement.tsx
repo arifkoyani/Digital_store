@@ -220,6 +220,8 @@ const UserManagement = () => {
     subscription_end: undefined,
     stored_email: "",
   });
+  const [editingPassword, setEditingPassword] = useState<string | null>(null);
+  const [tempPassword, setTempPassword] = useState("");
 
   // Calculate days between two dates
   const calculateDaysBetween = (startDate: string | Date, endDate: string | Date): number => {
@@ -466,17 +468,11 @@ const UserManagement = () => {
   };
 
   // Update account password
-  const updateAccountPassword = async (email: string) => {
+  const updateAccountPassword = async (email: string, newPassword: string) => {
     try {
-      const account = accounts.find(acc => acc.email === email);
-      if (!account) {
-        toast.error("Account not found");
-        return;
-      }
-
       const { error } = await supabase
         .from('accounts')
-        .update({ email_password: account.email_password })
+        .update({ email_password: newPassword })
         .eq('email', email);
 
       if (error) {
@@ -484,7 +480,17 @@ const UserManagement = () => {
         return;
       }
 
+      // Update local state
+      const updatedAccounts = accounts.map(acc => 
+        acc.email === email 
+          ? { ...acc, email_password: newPassword }
+          : acc
+      );
+      setAccounts(updatedAccounts);
+
       toast.success("Password updated successfully");
+      setEditingPassword(null);
+      setTempPassword("");
     } catch (error) {
       toast.error("An unexpected error occurred");
     }
@@ -731,39 +737,25 @@ const UserManagement = () => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
-                    {/* Password Update Section */}
+                    {/* Password Section - Compact View */}
                     <div className="mb-4 p-4 border rounded-lg bg-muted/30">
                       <div className="flex items-center gap-4">
-                        <Label htmlFor={`password-${email}`} className="font-medium min-w-[80px]">
+                        <Label className="font-medium min-w-[80px]">
                           Password:
                         </Label>
-                        <div className="flex-1 flex items-center gap-2">
-                          <Input
-                            id={`password-${email}`}
-                            type="text"
-                            value={accounts.find(acc => acc.email === email)?.email_password || ''}
-                            onChange={(e) => {
-                              const updatedAccounts = accounts.map(acc => 
-                                acc.email === email 
-                                  ? { ...acc, email_password: e.target.value }
-                                  : acc
-                              );
-                              setAccounts(updatedAccounts);
-                            }}
-                            placeholder="Enter password"
-                            className="flex-1"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateAccountPassword(email)}
-                            className="flex items-center gap-2"
-                          >
-                            <Edit className="h-4 w-4" />
-                            Update
-                          </Button>
-                        </div>
-                        <div className="flex items-center gap-2 min-w-[200px]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const currentPassword = accounts.find(acc => acc.email === email)?.email_password || '';
+                            setTempPassword(currentPassword);
+                            setEditingPassword(email);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <div className="flex items-center gap-2 flex-1">
                           <span className="text-sm font-mono bg-background px-2 py-1 rounded border flex-1">
                             {accounts.find(acc => acc.email === email)?.email_password || 'No password'}
                           </span>
@@ -778,6 +770,44 @@ const UserManagement = () => {
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Password Edit Modal */}
+                    <Dialog open={editingPassword === email} onOpenChange={(open) => !open && setEditingPassword(null)}>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Edit Password</DialogTitle>
+                          <DialogDescription>
+                            Update the password for {email}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="password-input">Password</Label>
+                            <Input
+                              id="password-input"
+                              type="text"
+                              value={tempPassword}
+                              onChange={(e) => setTempPassword(e.target.value)}
+                              placeholder="Enter new password"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setEditingPassword(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => updateAccountPassword(email, tempPassword)}
+                            disabled={!tempPassword.trim()}
+                          >
+                            Update Password
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                     <div className="rounded-md border">
                       <Table>
                         <TableHeader>
