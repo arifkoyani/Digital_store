@@ -697,9 +697,11 @@ const UserManagement = () => {
                         <Badge variant="default" className="bg-success text-success-foreground">
                           {emailUsers.filter(user => user.status === "active").length} active
                         </Badge>
-                        <Badge variant="destructive">
-                          {emailUsers.filter(user => user.status === "expired").length} expired
-                        </Badge>
+                        {emailUsers.filter(user => user.status === "expired").length > 0 && (
+                          <Badge variant="destructive">
+                            {emailUsers.filter(user => user.status === "expired").length} expired
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </AccordionTrigger>
