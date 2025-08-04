@@ -250,6 +250,19 @@ const AmazonUserManagement = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      
+      // Fetch Amazon accounts first to ensure we have the email list
+      const { data: accountsData, error: accountsError } = await supabase
+        .from('amazon')
+        .select('*')
+        .order('email');
+      
+      if (accountsError) {
+        console.error("Error fetching Amazon accounts:", accountsError);
+        toast.error("Failed to fetch Amazon accounts");
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -261,7 +274,7 @@ const AmazonUserManagement = () => {
       }
 
       // Filter users to only show those with emails that exist in Amazon accounts
-      const amazonEmails = accounts.map(account => account.email);
+      const amazonEmails = (accountsData || []).map(account => account.email);
       const amazonUsers = data.filter(user => amazonEmails.includes(user.email));
 
       // Update days and status for each user based on dates
