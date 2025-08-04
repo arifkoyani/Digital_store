@@ -260,8 +260,12 @@ const AmazonUserManagement = () => {
         return;
       }
 
+      // Filter users to only show those with emails that exist in Amazon accounts
+      const amazonEmails = accounts.map(account => account.email);
+      const amazonUsers = data.filter(user => amazonEmails.includes(user.email));
+
       // Update days and status for each user based on dates
-      const usersWithCalculatedData = data.map(user => {
+      const usersWithCalculatedData = amazonUsers.map(user => {
         const totalDays = calculateDaysBetween(user.subscription_start, user.subscription_end);
         const usedDays = calculateUsedDays(user.subscription_start);
         const status = calculateStatus(usedDays, totalDays);
@@ -582,9 +586,15 @@ const AmazonUserManagement = () => {
   }, {} as Record<string, User[]>);
 
   useEffect(() => {
-    fetchUsers();
     fetchAccounts();
   }, []);
+
+  // Fetch users when accounts change
+  useEffect(() => {
+    if (accounts.length > 0) {
+      fetchUsers();
+    }
+  }, [accounts]);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
