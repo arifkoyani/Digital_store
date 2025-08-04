@@ -465,6 +465,31 @@ const UserManagement = () => {
     }
   };
 
+  // Update account password
+  const updateAccountPassword = async (email: string) => {
+    try {
+      const account = accounts.find(acc => acc.email === email);
+      if (!account) {
+        toast.error("Account not found");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('accounts')
+        .update({ email_password: account.email_password })
+        .eq('email', email);
+
+      if (error) {
+        toast.error("Failed to update password");
+        return;
+      }
+
+      toast.success("Password updated successfully");
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   // Reset add form
   const resetAddForm = () => {
     setAddFormData({
@@ -706,6 +731,39 @@ const UserManagement = () => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
+                    {/* Password Update Section */}
+                    <div className="mb-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-4">
+                        <Label htmlFor={`password-${email}`} className="font-medium min-w-[80px]">
+                          Password:
+                        </Label>
+                        <div className="flex-1 flex items-center gap-2">
+                          <Input
+                            id={`password-${email}`}
+                            type="text"
+                            value={accounts.find(acc => acc.email === email)?.email_password || ''}
+                            onChange={(e) => {
+                              const updatedAccounts = accounts.map(acc => 
+                                acc.email === email 
+                                  ? { ...acc, email_password: e.target.value }
+                                  : acc
+                              );
+                              setAccounts(updatedAccounts);
+                            }}
+                            placeholder="Enter password"
+                            className="flex-1"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateAccountPassword(email)}
+                            className="min-w-[80px]"
+                          >
+                            Update
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                     <div className="rounded-md border">
                       <Table>
                         <TableHeader>
