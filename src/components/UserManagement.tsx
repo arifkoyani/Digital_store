@@ -125,7 +125,7 @@ const UserFormFields = ({
         </Label>
         <Input
           id="amount"
-          type="number"
+          type="text"
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })}
           className="col-span-3"
