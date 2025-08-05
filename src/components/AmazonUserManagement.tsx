@@ -28,6 +28,7 @@ interface User {
   total_days: number;
   used_days: number;
   status: string;
+  amount?: number;
 }
 
 interface UserFormData {
@@ -37,6 +38,7 @@ interface UserFormData {
   subscription_start: Date | undefined;
   subscription_end: Date | undefined;
   stored_email: string;
+  amount: number;
 }
 
 
@@ -113,6 +115,21 @@ const UserFormFields = ({
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           className="col-span-3"
           placeholder="Enter phone number"
+          required
+        />
+      </div>
+      
+      <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="amount" className="text-right font-medium">
+          Amount Pay <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="amount"
+          type="text"
+          value={formData.amount}
+          onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })}
+          className="col-span-3"
+          placeholder="Enter amount"
           required
         />
       </div>
@@ -213,6 +230,7 @@ const AmazonUserManagement = () => {
     subscription_start: undefined,
     subscription_end: undefined,
     stored_email: "",
+    amount: 0,
   });
   const [editFormData, setEditFormData] = useState<UserFormData>({
     name: "",
@@ -221,6 +239,7 @@ const AmazonUserManagement = () => {
     subscription_start: undefined,
     subscription_end: undefined,
     stored_email: "",
+    amount: 0,
   });
 
   // Calculate days between two dates
@@ -355,6 +374,7 @@ const AmazonUserManagement = () => {
             subscription_end: format(addFormData.subscription_end, 'yyyy-MM-dd'),
             total_days: totalDays,
             used_days: usedDays,
+            amount: addFormData.amount,
           },
         ])
         .select();
@@ -416,6 +436,7 @@ const AmazonUserManagement = () => {
           subscription_end: format(editFormData.subscription_end, 'yyyy-MM-dd'),
           total_days: totalDays,
           used_days: usedDays,
+          amount: editFormData.amount,
         })
         .eq('id', editingUser.id);
 
@@ -525,6 +546,7 @@ const AmazonUserManagement = () => {
       subscription_start: undefined,
       subscription_end: undefined,
       stored_email: "",
+      amount: 0,
     });
   };
 
@@ -537,6 +559,7 @@ const AmazonUserManagement = () => {
       subscription_start: undefined,
       subscription_end: undefined,
       stored_email: "",
+      amount: 0,
     });
   };
 
@@ -550,6 +573,7 @@ const AmazonUserManagement = () => {
       subscription_start: user.subscription_start ? new Date(user.subscription_start) : undefined,
       subscription_end: user.subscription_end ? new Date(user.subscription_end) : undefined,
       stored_email: "",
+      amount: user.amount || 0,
     });
     setIsEditDialogOpen(true);
   };
@@ -560,7 +584,8 @@ const AmazonUserManagement = () => {
            addFormData.phone.trim() !== "" &&
            addFormData.subscription_start !== undefined &&
            addFormData.subscription_end !== undefined &&
-           addFormData.stored_email.trim() !== "";
+           addFormData.stored_email.trim() !== "" &&
+           addFormData.amount >= 0;
   };
 
   // Check if edit form is valid
@@ -569,7 +594,8 @@ const AmazonUserManagement = () => {
            editFormData.email.trim() !== "" &&
            editFormData.phone.trim() !== "" &&
            editFormData.subscription_start !== undefined &&
-           editFormData.subscription_end !== undefined;
+           editFormData.subscription_end !== undefined &&
+           editFormData.amount >= 0;
   };
 
   // Copy to clipboard
