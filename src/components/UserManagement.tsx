@@ -710,11 +710,14 @@ const UserManagement = () => {
           <div className="text-2xl font-bold mb-4">{accounts.length}</div>
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {accounts.length > 0 ? (
-              accounts.map((account, index) => (
-                <div key={account.id || index} className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
-                  {account.email}: usage: {account.count_usage || 0}
-                </div>
-              ))
+              accounts.map((account, index) => {
+                const activeUsersCount = users.filter(user => user.email === account.email && user.status === "active").length;
+                return (
+                  <div key={account.id || index} className="text-sm text-muted-foreground p-2 bg-muted/50 rounded">
+                    {account.email}: usage: {activeUsersCount}
+                  </div>
+                );
+              })
             ) : (
               <div className="text-sm text-muted-foreground">No emails stored</div>
             )}
