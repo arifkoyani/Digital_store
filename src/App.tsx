@@ -8,8 +8,6 @@ import Netflix from "./pages/Netflix";
 import Amazon from "./pages/Amazon";
 import Store from "./pages/Store";
 import NotFound from "./pages/NotFound";
-import Home from "./pages/Home";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -19,8 +17,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/accounts" element={<Index />} />
+          <Route path="/" element={<Index />} />
           <Route path="/netflix" element={<Netflix />} />
           <Route path="/amazon" element={<Amazon />} />
           <Route path="/store" element={<Store />} />
