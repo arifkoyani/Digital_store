@@ -645,12 +645,15 @@ const AmazonUserManagement = () => {
 
       {/* Add User Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogTrigger asChild>
-          <Button className="mb-8 flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add User
-          </Button>
-        </DialogTrigger>
+      <div className="flex justify-center items-center py-10">
+  <DialogTrigger asChild>
+    <Button className="flex items-center gap-2">
+      <Plus className="h-4 w-4" />
+      Add User
+    </Button>
+  </DialogTrigger>
+</div>
+
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
